@@ -2,6 +2,7 @@ package org.pramod.find_my_train.entity;
 
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class TrainSchedule {
 
     @ManyToOne
     @JoinColumn(name="train_id")
+    @JsonManagedReference
     private Train train;
 
     @ManyToOne

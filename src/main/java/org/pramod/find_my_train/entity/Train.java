@@ -1,6 +1,8 @@
 package org.pramod.find_my_train.entity;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,6 +25,7 @@ public class Train {
 
 
       @OneToMany( mappedBy ="train",cascade =CascadeType.ALL, fetch = FetchType.LAZY)
+      @JsonBackReference
       private List<TrainSchedule>  trainSchedule;
 
 
