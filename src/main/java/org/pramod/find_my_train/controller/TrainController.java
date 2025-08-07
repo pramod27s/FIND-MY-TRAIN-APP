@@ -7,7 +7,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/trains")
+@RequestMapping("/api/trains")
+@CrossOrigin(origins = "*")
 public class TrainController {
     @Autowired
     private TrainService trainService;
@@ -19,13 +20,11 @@ public class TrainController {
     @GetMapping
     public List<Train> getTrains() {
         return trainService.getAllTrains();
-
     }
 
     @PostMapping
     public Train addTrain(@RequestBody Train train) {
          return  trainService.addTrain(train);
-
     }
 
 

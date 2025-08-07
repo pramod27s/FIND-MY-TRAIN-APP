@@ -15,15 +15,22 @@ public class TrainSearchService  {
            this.trainScheduleRepo = trainScheduleRepo;
        }
 
-
     public List<TrainSchedule> searchTrainByCode(String sourceCode, String destinationCode) {
-        return trainScheduleRepo.findBySource_StationCodeAndDestination_StationCode( sourceCode, destinationCode);
+        // First try exact match, then case-insensitive
+        List<TrainSchedule> results = trainScheduleRepo.findBySource_StationCodeAndDestination_StationCode(sourceCode, destinationCode);
+        if (results.isEmpty()) {
+            results = trainScheduleRepo.findByStationCodesIgnoreCase(sourceCode, destinationCode);
+        }
+        return results;
     }
-
 
     public List<TrainSchedule> searchTrainByName(String sourceName, String destinationName) {
-        return trainScheduleRepo.findBySource_StationNameAndDestination_StationName( sourceName, destinationName);
+        // First try exact match, then case-insensitive with partial matching
+        List<TrainSchedule> results = trainScheduleRepo.findBySource_StationNameAndDestination_StationName(sourceName, destinationName);
+        if (results.isEmpty()) {
+            results = trainScheduleRepo.findByStationNamesIgnoreCase(sourceName, destinationName);
+        }
+        return results;
     }
-
 
 }

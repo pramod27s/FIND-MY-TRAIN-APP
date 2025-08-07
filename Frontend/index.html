@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find My Train - Railway Management System</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <h1><i class="fas fa-train"></i> Find My Train</h1>
+            <p>Railway Management System</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+
+            <!-- Search Section -->
+            <section class="search-section">
+                <h2>Search Trains</h2>
+                <form class="search-form" onsubmit="searchTrains(event)">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="from-station">From Station:</label>
+                            <input type="text" id="from-station" placeholder="Enter source station" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="to-station">To Station:</label>
+                            <input type="text" id="to-station" placeholder="Enter destination station" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="travel-date">Date:</label>
+                            <input type="date" id="travel-date" required>
+                        </div>
+
+                        <div class="form-group">
+                            <button type="submit" class="search-btn">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </section>
+
+            <!-- Results Section -->
+            <section id="results" class="results-section" style="display: none;">
+                <h2>Search Results</h2>
+                <div class="loading" id="loading" style="display: none;">
+                    <p>Searching trains...</p>
+                </div>
+                <div id="train-results" class="train-results"></div>
+            </section>
+
+            <!-- All Trains Section -->
+            <section class="all-trains-section">
+                <h2>All Available Trains</h2>
+                <div class="filter-buttons">
+                    <button class="filter-btn active" onclick="filterTrains('all')">All</button>
+                    <button class="filter-btn" onclick="filterTrains('express')">Express</button>
+                    <button class="filter-btn" onclick="filterTrains('local')">Local</button>
+                </div>
+                <div id="all-trains" class="trains-grid">
+                    <!-- Trains will be loaded here -->
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 Find My Train - Railway Management System | Developed by Engineering Student</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+</html>
