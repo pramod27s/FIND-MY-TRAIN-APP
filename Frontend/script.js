@@ -165,8 +165,9 @@ function createOptimizedTrainCard(train) {
             <div class="journey-details">
                 <div class="time-section">
                     <div class="departure">
+                     <div class="station">${train.sourceStation || train.fromStation || 'Departure:'}</div>
                         <div class="time">${departureTime}</div>
-                        <div class="station">${train.sourceStation || train.fromStation || 'Departure'}</div>
+                       
                     </div>
                     <div class="journey-line">
                         <div class="duration">${duration}</div>
@@ -176,8 +177,9 @@ function createOptimizedTrainCard(train) {
                         </div>
                     </div>
                     <div class="arrival">
+                     <div class="station">${train.destinationStation || train.toStation || 'Arrival:'}</div>
                         <div class="time">${arrivalTime}</div>
-                        <div class="station">${train.destinationStation || train.toStation || 'Arrival'}</div>
+                       
                     </div>
                 </div>
             </div>
