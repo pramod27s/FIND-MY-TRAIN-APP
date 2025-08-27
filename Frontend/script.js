@@ -90,48 +90,196 @@ function displayBackendError() {
         </div>
     `;
 }
-
-// Display search results
 function displaySearchResults(trains, fromStation, toStation) {
     const trainResults = document.getElementById('train-results');
 
-    if (trains.length === 0) {
+    if (!trains || trains.length === 0) {
         trainResults.innerHTML = `
             <div class="no-results">
                 <i class="fas fa-search"></i>
                 <h3>No trains found</h3>
                 <p>No trains available from ${fromStation} to ${toStation}</p>
+                <div class="suggestions">
+                    <p>Try:</p>
+                    <ul>
+                        <li>Checking station names for typos</li>
+                        <li>Using different station names or codes</li>
+                        <li>Searching for a different date</li>
+                    </ul>
+                </div>
             </div>
         `;
         return;
     }
 
-    trainResults.innerHTML = trains.map(train => `
-        <div class="train-card">
+    // Sort trains by departure time
+    const sortedTrains = trains.sort((a, b) => {
+        const timeA = convertTimeToMinutes(a.departureTime || a.departure);
+        const timeB = convertTimeToMinutes(b.departureTime || b.departure);
+        return timeA - timeB;
+    });
+
+    trainResults.innerHTML = `
+        <div class="results-header">
+            <h3>${sortedTrains.length} train(s) found from ${fromStation} to ${toStation}</h3>
+        </div>
+        <div class="trains-list">
+            ${sortedTrains.map(train => createOptimizedTrainCard(train)).join('')}
+        </div>
+    `;
+}
+
+function createOptimizedTrainCard(train) {
+    // Handle different property names from TrainSchedule vs Train entity
+    const trainName = train.trainName || train.train?.trainName || `Train ${train.trainNumber || train.train?.trainNumber || 'Unknown'}`;
+    const trainNumber = train.trainNumber || train.train?.trainNumber || train.id || 'N/A';
+    const departureTime = train.departureTime || train.departure || 'N/A';
+    const arrivalTime = train.arrivalTime || train.arrival || 'N/A';
+
+    // Calculate duration if not provided
+    let duration = train.duration;
+    if (!duration && departureTime !== 'N/A' && arrivalTime !== 'N/A') {
+        duration = calculateDuration(departureTime, arrivalTime);
+    } else if (!duration) {
+        duration = 'N/A';
+    }
+
+    // Handle fare with currency formatting
+    const fare = train.fare ? `₹${train.fare}` : 'Contact for price';
+
+    // Handle train type
+    const trainType = train.type || train.train?.type || 'Express';
+
+    return `
+        <div class="train-card enhanced">
             <div class="train-header">
-                <div class="train-name">${train.trainName}</div>
-                <div class="train-number">${train.trainNumber}</div>
-            </div>
-            <div class="train-details">
-                <div class="detail-item">
-                    <div class="detail-label">Departure</div>
-                    <div class="detail-value">${train.departureTime}</div>
+                <div class="train-info">
+                    <div class="train-name">${trainName}</div>
+                    <div class="train-number">#${trainNumber}</div>
                 </div>
-                <div class="detail-item">
-                    <div class="detail-label">Duration</div>
-                    <div class="detail-value">${train.duration}</div>
-                </div>
-                <div class="detail-item">
-                    <div class="detail-label">Arrival</div>
-                    <div class="detail-value">${train.arrivalTime}</div>
+                <div class="train-type-badge ${trainType.toLowerCase()}">
+                    ${trainType.toUpperCase()}
                 </div>
             </div>
+
+            <div class="journey-details">
+                <div class="time-section">
+                    <div class="departure">
+                        <div class="time">${departureTime}</div>
+                        <div class="station">${train.sourceStation || train.fromStation || 'Departure'}</div>
+                    </div>
+                    <div class="journey-line">
+                        <div class="duration">${duration}</div>
+                        <div class="travel-line">
+                            <div class="line"></div>
+                            <i class="fas fa-train"></i>
+                        </div>
+                    </div>
+                    <div class="arrival">
+                        <div class="time">${arrivalTime}</div>
+                        <div class="station">${train.destinationStation || train.toStation || 'Arrival'}</div>
+                    </div>
+                </div>
+            </div>
+
             <div class="train-footer">
-                <div class="fare">${train.fare || 'Contact for price'}</div>
-                <button class="book-btn" onclick="bookTrain('${train.trainNumber}')">Book Now</button>
+                <div class="fare-section">
+                    <div class="fare">${fare}</div>
+                    <div class="availability">${train.availability || train.seats || 'Available'}</div>
+                </div>
+                <button class="book-btn" onclick="bookTrain('${trainNumber}', '${trainName}')">
+                    <i class="fas fa-ticket-alt"></i> Book Now
+                </button>
             </div>
         </div>
-    `).join('');
+    `;
+}
+
+// Utility function to calculate duration between two times
+function calculateDuration(departureTime, arrivalTime) {
+    try {
+        const depMinutes = convertTimeToMinutes(departureTime);
+        const arrMinutes = convertTimeToMinutes(arrivalTime);
+
+        let durationMinutes = arrMinutes - depMinutes;
+
+        // Handle next day arrival
+        if (durationMinutes < 0) {
+            durationMinutes += 24 * 60;
+        }
+
+        const hours = Math.floor(durationMinutes / 60);
+        const minutes = durationMinutes % 60;
+
+        if (hours === 0) {
+            return `${minutes}m`;
+        } else if (minutes === 0) {
+            return `${hours}h`;
+        } else {
+            return `${hours}h ${minutes}m`;
+        }
+    } catch (error) {
+        console.error('Error calculating duration:', error);
+        return 'N/A';
+    }
+}
+
+// Utility function to convert time string to minutes
+function convertTimeToMinutes(timeStr) {
+    if (!timeStr || timeStr === 'N/A') return 0;
+
+    try {
+        // Handle different time formats
+        let cleanTime = timeStr.toString().trim();
+
+        // Handle 24-hour format (HH:MM)
+        if (cleanTime.match(/^\d{1,2}:\d{2}$/)) {
+            const [hours, minutes] = cleanTime.split(':').map(Number);
+            return hours * 60 + minutes;
+        }
+
+        // Handle 12-hour format (HH:MM AM/PM)
+        if (cleanTime.match(/^\d{1,2}:\d{2}\s*(AM|PM)$/i)) {
+            const [time, period] = cleanTime.split(' ');
+            const [hours, minutes] = time.split(':').map(Number);
+            let totalMinutes = hours * 60 + minutes;
+
+            if (period.toUpperCase() === 'PM' && hours !== 12) {
+                totalMinutes += 12 * 60;
+            } else if (period.toUpperCase() === 'AM' && hours === 12) {
+                totalMinutes -= 12 * 60;
+            }
+
+            return totalMinutes;
+        }
+
+        // If format is unrecognized, return 0
+        return 0;
+    } catch (error) {
+        console.error('Error parsing time:', timeStr, error);
+        return 0;
+    }
+}
+
+// Enhanced book train function
+function bookTrain(trainNumber, trainName) {
+    const fromStation = document.getElementById('from-station').value;
+    const toStation = document.getElementById('to-station').value;
+    const travelDate = document.getElementById('travel-date').value;
+
+    showMessage(
+        `Booking initiated for ${trainName} (${trainNumber}) from ${fromStation} to ${toStation} on ${travelDate}`,
+        'success'
+    );
+
+    // Here you could redirect to a booking page or open a modal
+    console.log('Booking details:', {
+        trainNumber,
+        trainName,
+        fromStation,
+        toStation,
+        travelDate
+    });
 }
 
 // Load all trains
